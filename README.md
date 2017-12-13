@@ -23,5 +23,5 @@ There are two options attached to the command.  
 Running environments:  
 Python 2.7.12 + Ubuntu 16.04 LTS + latest Firefox (with geckodriver executable)  
 
-Config:  
+Config:__
 KaggleReader.py imports several external packages. Please run config.sh first to make sure having these packages ready. 
