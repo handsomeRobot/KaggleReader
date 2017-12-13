@@ -106,10 +106,12 @@ wkdir = options.wkdir
 clear = options.clear
 #script, url = argv
 base_url = str(args[0])
+username  =str(args[1])
+password = str(args[2])
 cmp_file = ['.zip', '.gz', '.7z']
 print 'Competition address: ', base_url
 print 'Logging...'
-payload = {'UserName': "kangkangFromJS", 'Password': "kagglelenovo"}
+payload = {'UserName': username, 'Password': password}
 disturbs = ['the', 'a', 'on', 'should', 'of', 'in', 'is', 'to', 'it', 'id']
 rule_url = base_url + '/rules'
 agree_terms(rule_url)
