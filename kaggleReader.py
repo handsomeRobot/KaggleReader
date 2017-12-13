@@ -106,7 +106,7 @@ wkdir = options.wkdir
 clear = options.clear
 #script, url = argv
 base_url = str(args[0])
-username  =str(args[1])
+username = str(args[1])
 password = str(args[2])
 cmp_file = ['.zip', '.gz', '.7z']
 print 'Competition address: ', base_url
