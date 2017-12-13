@@ -173,10 +173,7 @@ train_files = [file for file in files if 'train' in file.lower() and 'unlabeled'
 test_files = [file for file in files if 'test' in file.lower()]
 submission_files = [file for file in files if 'submission' in file.lower()]
 supply_files = [file for file in files if file not in test_files and file not in submission_files and file not in train_files and os.path.splitext(file)[1] != '.log' and os.path.splitext(file)[1] != '' and os.path.splitext(file)[1] != '.ipynb' and os.path.splitext(file)[1] != '.py' and 'description'.lower()not in file.lower() and 'check' not in file.lower() and 'dictionary' not in file.lower() and 'unlabeledtrain' not in file.lower() and 'documentation' not in file.lower()]
-print '>>>Train Files: ', train_files
-print '>>>Test Files: ', test_files
-print '>>>Submission Files: ', submission_files
-print '>>>Supply Files: ', supply_files
+
 
 
 #retrieve the target variables
@@ -213,10 +210,25 @@ supply_var = []
 for file in supply_files:
     with open(file) as f:
         supply_var += f.readline().strip().split(',')
+supply_var = list(set(map(lambda x: x.replace('"', '').strip(), supply_var)))
+if len(train_files) == 0 and len(test_files) != 0 and len(supply_files) != 0:
+    train_var = supply_var
+    train_files = supply_files
+    supply_files = []
+print '>>>Train Files: ', train_files
+print '>>>Test Files: ', test_files
+print '>>>Submission Files: ', submission_files
+print '>>>Supply Files: ', supply_files
 #print 'FOR DEBUG, target_words: ', target_words
+
+
+
+
 #findout the target_variables
 if not isAllNum(train_var):
     target_var = []
+    print 'var in train_var but not in test_var: '
+    print [var for var in train_var if var not in test_var]
     for var in [var for var in train_var if var not in test_var]:
         for w in target_words.keys():
             if w == '':
@@ -269,8 +281,8 @@ if not isAllNum(train_var): #if there are column names
                 test_data = cstm_concat(test_data, data)
     for n, file in enumerate(supply_files):
         data = pd.read_csv(file)
-        train_data = cstm_concat(train_data, data)
         test_data = cstm_concat(test_data, data)
+        train_data = cstm_concat(train_data, data)
     train_data = train_data[target_var + [var for var in train_data if var not in target_var]]
     try:
         test_data = test_data[target_var + [var for var in train_data if var not in target_var]]
