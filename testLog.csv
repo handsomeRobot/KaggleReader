@@ -1,5 +1,5 @@
 url,result,problem,Accuracy
-https://www.kaggle.com/c/house-prices-advanced-regression-techniques,success,,63.00%
+https://www.kaggle.com/c/house-prices-advanced-regression-techniques,success,,65.00%
 https://www.kaggle.com/c/titanic,success,,
 https://www.kaggle.com/c/mercari-price-suggestion-challenge,success,,
 https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting,fail,two seperate sets of train data and id in test data needs combination,
