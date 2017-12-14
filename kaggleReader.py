@@ -166,6 +166,8 @@ files = os.listdir('.')
 files = map(lambda x: convert(x), files)
 
 
+
+
 #locate the test file and train file and (if there is) train_label_file
 files = [file for file in os.listdir('.') if os.path.splitext(file)[1] == '.csv']
 print '>>>Files: ', files
@@ -173,10 +175,41 @@ train_files = [file for file in files if 'train' in file.lower() and 'unlabeled'
 test_files = [file for file in files if 'test' in file.lower()]
 submission_files = [file for file in files if 'submission' in file.lower()]
 supply_files = [file for file in files if file not in test_files and file not in submission_files and file not in train_files and os.path.splitext(file)[1] != '.log' and os.path.splitext(file)[1] != '' and os.path.splitext(file)[1] != '.ipynb' and os.path.splitext(file)[1] != '.py' and 'description'.lower()not in file.lower() and 'check' not in file.lower() and 'dictionary' not in file.lower() and 'unlabeledtrain' not in file.lower() and 'documentation' not in file.lower()]
+        
 
 
 
-#retrieve the target variables
+#extract the column names in the test file and train file and train_label_file, respectively
+train_var = []
+for file in train_files:
+    with open(file) as f:
+        train_var += f.readline().strip().split(',')
+train_var = list(set(map(lambda x: x.replace('"', '').strip(), train_var)))
+test_var = []
+for file in test_files:
+    with open(file) as f:
+        test_var += f.readline().strip().split(',')
+test_var = list(set(map(lambda x: x.replace('"', '').strip(), test_var)))
+supply_var = []
+for file in supply_files:
+    with open(file) as f:
+        supply_var += f.readline().strip().split(',')
+supply_var = list(set(map(lambda x: x.replace('"', '').strip(), supply_var)))
+#special cases with abnormal filenames
+if len(train_files) == 0 and len(test_files) != 0 and len(supply_files) != 0:
+    train_var = supply_var
+    train_files = supply_files
+    supply_files = []
+print '>>>Train Files: ', train_files
+print '>>>Test Files: ', test_files
+print '>>>Submission Files: ', submission_files
+print '>>>Supply Files: ', supply_files
+
+
+
+
+
+#list possible column name for the label by parsing the description on the competition website
 target_lines = [line for line in htmlpage.split('.') if ('target' in line.lower()or 'predict' in line.lower() or 'prediction' in line.lower() or 'classify' in line.lower() or 'classified' in line.lower()
                                                         or 'forcast' in line.lower() or 'expect' in line.lower() or 'label' in line.lower()) and '=' not in line]
 target_lines = map(lambda x: x.split(), target_lines)
@@ -195,41 +228,19 @@ for w in target_words2:
         target_words[w] += 1
     else:
         target_words[w] = 1
-#extract the column names in the test file and train file and train_label_file, respectively
-train_var = []
-for file in train_files:
-    with open(file) as f:
-        train_var += f.readline().strip().split(',')
-train_var = list(set(map(lambda x: x.replace('"', '').strip(), train_var)))
-test_var = []
-for file in test_files:
-    with open(file) as f:
-        test_var += f.readline().strip().split(',')
-test_var = list(set(map(lambda x: x.replace('"', '').strip(), test_var)))
-supply_var = []
-for file in supply_files:
-    with open(file) as f:
-        supply_var += f.readline().strip().split(',')
-supply_var = list(set(map(lambda x: x.replace('"', '').strip(), supply_var)))
-if len(train_files) == 0 and len(test_files) != 0 and len(supply_files) != 0:
-    train_var = supply_var
-    train_files = supply_files
-    supply_files = []
-print '>>>Train Files: ', train_files
-print '>>>Test Files: ', test_files
-print '>>>Submission Files: ', submission_files
-print '>>>Supply Files: ', supply_files
-#print 'FOR DEBUG, target_words: ', target_words
 
 
 
 
-#findout the target_variables
-if not isAllNum(train_var):
+
+#lock the target variable by comparing description parse result and column names in the dataset
+if not isAllNum(train_var + test_var + supply_var):
     target_var = []
-    print 'var in train_var but not in test_var: '
-    print [var for var in train_var if var not in test_var]
-    for var in [var for var in train_var if var not in test_var]:
+    comparing_var = [var for var in train_var if var not in test_var]
+    if len(comparing_var) == 0:
+        supply_data = pd.read_csv(supply_files[0])
+        comparing_var = [var for var in supply_var if len(supply_data[supply_data[var].isnull()][var]) * 1.0 / len(supply_data[var]) > 0.1]
+    for var in comparing_var:
         for w in target_words.keys():
             if w == '':
                 continue
@@ -256,11 +267,20 @@ if not isAllNum(train_var):
 
 
 
+#deal with special cases with abnormal filenames
+if len(train_files) == 0 and len(test_files) == 0 and len(supply_files) == 1:
+    data = pd.read_csv(supply_files[0])
+    train_data = data[data[target].notnull()]
+    test_data = data[data[target].isnull()]
+    supply_files = []
+
+
+
 #merge train_data and test_data, respectively
 print 'Processing data...'
 outfile_train = open('parse_train.csv', 'w')
 outfile_test = open('parse_test.csv', 'w')
-if not isAllNum(train_var): #if there are column names
+if not isAllNum(train_var + test_var + supply_var): #if there are column names
     for n, file in enumerate(train_files):
         if n == 0:
             train_data = pd.read_csv(file)
@@ -310,7 +330,7 @@ if not isAllNum(train_var): #if there are column names
 
     
 
-elif isAllNum(train_var): #if there are not column names:
+elif isAllNum(train_var + test_var + supply_var): #if there are not column names:
     print 'Processing data...'
     if len(train_files) == 2 and ('label' in train_files[0].lower() or 'label' in train_files[1].lower()) and len(test_files) == 1 and len(supply_files) == 0:
         train_data = pd.read_csv([file for file in train_files if 'label' not in file.lower()][0], header = None)
