@@ -61,3 +61,4 @@ https://www.kaggle.com/c/sentiment-analysis-on-movie-reviews,success,,
 https://www.kaggle.com/c/avazu-ctr-prediction, fail, memory error (largest file 1.04G),
 https://www.kaggle.com/c/helping-santas-helpers, fail, datasheet needs math process,
 https://www.kaggle.com/c/tradeshift-text-classification, fail, multiple lables,
+https://www.kaggle.com/c/learning-social-circles, fail, file-format:text
