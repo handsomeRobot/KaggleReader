@@ -169,7 +169,8 @@ files = map(lambda x: convert(x), files)
 
 
 #locate the test file and train file and (if there is) train_label_file
-files = [file for file in os.listdir('.') if os.path.splitext(file)[1] == '.csv']
+files = [file for file in os.listdir('.') if os.path.splitext(file)[1] == '.csv'] + [file for file in os.listdir('.') if os.path.splitext(file)[1] == '' and 
+(os.path.splitext(file)[0] == 'test' or os.path.splitext(file)[0] == 'train')]
 print '>>>Files: ', files
 train_files = [file for file in files if 'train' in file.lower() and 'unlabeled' not in file.lower()]
 test_files = [file for file in files if 'test' in file.lower()]
@@ -228,12 +229,16 @@ for w in target_words2:
         target_words[w] += 1
     else:
         target_words[w] = 1
+print 'target_words: '
+print target_words
 
 
 
 
 
 #lock the target variable by comparing description parse result and column names in the dataset
+
+#the overlap between column names and suspect words on the webpage
 if not isAllNum(train_var + test_var + supply_var):
     target_var = []
     comparing_var = [var for var in train_var if var not in test_var]
@@ -248,22 +253,32 @@ if not isAllNum(train_var + test_var + supply_var):
                 target_var.append(var)
                 break
     target_var = map(lambda x: x.replace('"', ''), target_var)
-    target = target_var[0]
-    var_cnt = []
-    target_cnt = []
-    for w in [w for w in target_words.keys() if w.lower() in target.lower()]:
-        target_cnt.append(target_words[w])
-    for var in target_var:
-        for w in [w for w in target_words.keys() if w.lower() in var.lower()]:
-            var_cnt.append(target_words[w])
-        if max(var_cnt) < max(target_cnt):
-            continue
-        else:
+#choose the high-frequency column name as label if there is overlap
+    if len(target_var) > 0:
+        target = target_var[0]
+        var_cnt = []
+        target_cnt = []
+        for w in [w for w in target_words.keys() if w.lower() in target.lower()]:
+            target_cnt.append(target_words[w])
+        for var in target_var:
+            for w in [w for w in target_words.keys() if w.lower() in var.lower()]:
+                var_cnt.append(target_words[w])
+            if max(var_cnt) < max(target_cnt):
+                continue
+            else:
+                target = var
+                for w in [w for w in target_words.keys() if w.lower() in target.lower()]:
+                    target_cnt.append(target_words[w])
+#if there is no overlap, choose the one in train but not in test
+    elif len(target_var) == 0 and (len(train_var) - len(test_var)) == 1:
+        target_var = [var for var in train_var if var not in test_var]
+#if there is column name 'label', thats it
+    for var in train_var + test_var + supply_var:
+        if 'label' in var.lower():
             target = var
-            for w in [w for w in target_words.keys() if w.lower() in target.lower()]:
-                target_cnt.append(target_words[w])
     print '>>>Target variable: ', target
     target_var = [target]
+
 
 
 
